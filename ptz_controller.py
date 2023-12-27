@@ -108,7 +108,7 @@ if __name__ == '__main__':
                 currentcam = Camera(ip1)
                 iscamera2 = False
             zoom = currentcam.get_zoom_position()
-            currentcam.pan_tilt(controller['x1'] * 12 / zoom, controller['y1'] * 12 / zoom)
+            currentcam.pantilt(controller['x1'] * 12 / zoom, controller['y1'] * 12 / zoom)
             if controller['b1']:
                 currentcam.zoom(controller['t1'] * -1)
             else:
@@ -118,7 +118,7 @@ if __name__ == '__main__':
                 currentcam = Camera(ip2)
                 iscamera2 = True
             zoom = currentcam.get_zoom_position()
-            currentcam.pan_tilt(controller['x2'] * 12 / zoom, controller['y2'] * 12 / zoom)
+            currentcam.pantilt(controller['x2'] * 12 / zoom, controller['y2'] * 12 / zoom)
             if controller['b2']:
                 currentcam.zoom(controller['t2'] * -7)
             else:
