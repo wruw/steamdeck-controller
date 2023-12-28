@@ -108,18 +108,18 @@ if __name__ == '__main__':
                 currentcam = Camera(ip1)
                 iscamera2 = False
             zoom = currentcam.get_zoom_position() + 1
-            currentcam.pantilt(controller['x1'] * 12 / zoom, controller['y1'] * 12 / zoom)
+            currentcam.pantilt(int(controller['x1'] * 12 / zoom), int(controller['y1'] * 12 / zoom))
             if controller['b1']:
-                currentcam.zoom(controller['t1'] * -1)
+                currentcam.zoom(int(controller['t1'] * -7))
             else:
-                currentcam.zoom(controller['t1'])
+                currentcam.zoom(int(controller['t1']) * 7)
         if controller['x2'] > 0.1 or controller['x2'] < -0.1 or controller['y2'] > 0.1 or controller['y2'] < -0.1 or controller['t2'] > 0.1:
             if not iscamera2:
                 currentcam = Camera(ip2)
                 iscamera2 = True
             zoom = currentcam.get_zoom_position() + 1
-            currentcam.pantilt(controller['x2'] * 12 / zoom, controller['y2'] * 12 / zoom)
+            currentcam.pantilt(int(controller['x2'] * 12 / zoom), int(controller['y2'] * 12 / zoom))
             if controller['b2']:
-                currentcam.zoom(controller['t2'] * -7)
+                currentcam.zoom(int(controller['t2'] * -7))
             else:
-                currentcam.zoom(controller['t2'] * 7)
+                currentcam.zoom(int(controller['t2'] * 7))
