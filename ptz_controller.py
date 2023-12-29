@@ -98,13 +98,20 @@ class XboxController(object):
 
 
 if __name__ == '__main__':
+    print('conneting to camera 1')
     currentcam = Camera(ip1)
     iscamera2 = False
+    cam1active = False
+    cam2active = False
     joy = XboxController()
     while True:
         controller = joy.read()
-        if controller['x1'] > 0.1 or controller['x1'] < -0.1 or controller['y1'] > 0.1 or controller['y1'] < -0.1 or controller['t1'] > 0.1:
+        if controller['x1'] > 0.1 or controller['x1'] < -0.1 or controller['y1'] > 0.1 or controller['y1'] < -0.1 or controller['t1'] > 0.1 or cam1active:
+            if controller['x1'] == 0 and controller['y1'] == 0 and controller['t1'] == 0:
+                cam1active = False
             if iscamera2:
+                print('conneting to camera 1')
+                currentcam.close()
                 currentcam = Camera(ip1)
                 iscamera2 = False
             zoom = currentcam.get_zoom_position() + 1
@@ -113,8 +120,12 @@ if __name__ == '__main__':
                 currentcam.zoom(int(controller['t1'] * -7))
             else:
                 currentcam.zoom(int(controller['t1']) * 7)
-        if controller['x2'] > 0.1 or controller['x2'] < -0.1 or controller['y2'] > 0.1 or controller['y2'] < -0.1 or controller['t2'] > 0.1:
+        if controller['x2'] > 0.1 or controller['x2'] < -0.1 or controller['y2'] > 0.1 or controller['y2'] < -0.1 or controller['t2'] > 0.1 or cam2active:
+            if controller['x2'] == 0 and controller['y2'] == 0 and controller['t2'] == 0:
+                cam2active = False
             if not iscamera2:
+                print('conneting to camera 2')
+                currentcam.close()
                 currentcam = Camera(ip2)
                 iscamera2 = True
             zoom = currentcam.get_zoom_position() + 1
