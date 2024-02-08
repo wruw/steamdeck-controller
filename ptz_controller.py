@@ -2,6 +2,7 @@ from visca_over_ip import Camera
 from inputs import get_gamepad
 import math
 import threading
+import time
 
 ip1 = '192.168.0.81'
 ip2 = '192.168.0.82'
@@ -98,7 +99,6 @@ class XboxController(object):
 
 
 if __name__ == '__main__':
-    print('conneting to camera 1')
     currentcam = Camera(ip1)
     iscamera2 = False
     cam1active = False
@@ -106,17 +106,17 @@ if __name__ == '__main__':
     joy = XboxController()
     while True:
         controller = joy.read()
-        print(controller)
         if controller['x1'] > 0.1 or controller['x1'] < -0.1 or controller['y1'] > 0.1 or controller['y1'] < -0.1 or controller['t1'] > 0.1 or cam1active:
             if controller['x1'] < 0.1 and controller['x1'] > -0.1 and controller['y1'] < 0.1 and controller['y1'] > -0.1 and controller['t1'] < 0.1:
                 cam1active = False
+            else:
+                cam1active = True
             if iscamera2:
-                print('conneting to camera 1')
-                currentcam.close()
+                currentcam.close_connection()
                 currentcam = Camera(ip1)
                 iscamera2 = False
-            zoom = currentcam.get_zoom_position() + 1
-            currentcam.pantilt(int(controller['x1'] * -12 / zoom), int(controller['y1'] * -12 / zoom))
+            zoom = max(currentcam.get_zoom_position()/1000,1)
+            currentcam.pantilt(int(controller['x1'] * -12 / zoom), int(controller['y1'] * 12 / zoom))
             if controller['b1']:
                 currentcam.zoom(int(controller['t1'] * -7))
             else:
@@ -124,13 +124,14 @@ if __name__ == '__main__':
         if controller['x2'] > 0.1 or controller['x2'] < -0.1 or controller['y2'] > 0.1 or controller['y2'] < -0.1 or controller['t2'] > 0.1 or cam2active:
             if controller['x2'] < 0.1 and controller['x2'] > -0.1 and controller['y2'] < 0.1 and controller['y2'] > -0.1 and controller['t2'] < 0.1:
                 cam2active = False
+            else:
+                cam2active = True
             if not iscamera2:
-                print('conneting to camera 2')
-                currentcam.close()
+                currentcam.close_connection()
                 currentcam = Camera(ip2)
                 iscamera2 = True
-            zoom = currentcam.get_zoom_position() + 1
-            currentcam.pantilt(int(controller['x2'] * -12 / zoom), int(controller['y2'] * -12 / zoom))
+            zoom = max(currentcam.get_zoom_position()/1000,1)
+            currentcam.pantilt(int(controller['x2'] * -12 / zoom), int(controller['y2'] * 12 / zoom))
             if controller['b2']:
                 currentcam.zoom(int(controller['t2'] * -7))
             else:
