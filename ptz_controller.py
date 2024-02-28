@@ -1,11 +1,14 @@
+ptz_controller.py
 from visca_over_ip import Camera
 from inputs import get_gamepad
 import math
 import threading
-import time
+import PyATEMMax
 
-ip1 = '192.168.0.81'
-ip2 = '192.168.0.82'
+ip1 = '192.168.1.81'
+ip2 = '192.168.1.82'
+atem = '192.168.1.80'
+
 
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
@@ -48,7 +51,11 @@ class XboxController(object):
         b2 = self.RightBumper
         t1 = self.LeftTrigger
         t2 = self.RightTrigger
-        return {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2, 'b1': b1, 'b2': b2, 't1': t1, 't2': t2}
+        c1 = self.UpDPad
+        c2 = self.RightDPad
+        c3 = self.LeftDPad
+        c4 = self.DownDPad
+        return {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2, 'b1': b1, 'b2': b2, 't1': t1, 't2': t2, 'c1': c1, 'c2': c2, 'c3': c3, 'c4': c4}
 
     def _monitor_controller(self):
         while True:
@@ -100,9 +107,13 @@ class XboxController(object):
 
 if __name__ == '__main__':
     currentcam = Camera(ip1)
+    switcher = PyATEMMax.PyATEMMax()
+    switcher.connect(atem)
+    switcher.wait_for_connection()
     iscamera2 = False
     cam1active = False
     cam2active = False
+    channel = 0
     joy = XboxController()
     while True:
         controller = joy.read()
@@ -136,3 +147,27 @@ if __name__ == '__main__':
                 currentcam.zoom(int(controller['t2'] * -7))
             else:
                 currentcam.zoom(int(controller['t2'] * 7))
+        if controller['c1'] or controller['c2'] or controller['c3'] or controller['c4']:
+            if controller['c1']:
+                if channel == 0:
+                    channel = 1
+                if controller['c2']:
+                    channel = 7
+                if controller['c3']:
+                    channel = 6
+            elif controller['c2']:
+                if channel == 0:
+                    channel = 2
+                if controller['c4']:
+                    channel = 6
+            elif controller['c3']:
+                if channel == 0:
+                    channel = 3
+                if controller['c4']:
+                    channel = 8
+            elif controller['c4']:
+                if channel == 0:
+                    channel = 4
+        elif channel:
+            switcher.change_program(channel)
+            channel = 0
