@@ -4,8 +4,8 @@ import math
 import threading
 import time
 
-ip1 = '192.168.0.81'
-ip2 = '192.168.0.82'
+ip1 = '192.168.1.81'
+ip2 = '192.168.1.82'
 
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
@@ -117,7 +117,7 @@ if __name__ == '__main__':
                 iscamera2 = False
             zoom = max(currentcam.get_zoom_position()/1000,1)
             currentcam.pantilt(int(controller['x1'] * -12 / zoom), int(controller['y1'] * 12 / zoom))
-            if controller['b1']:
+            if controller['b1'] > 0.1:
                 currentcam.zoom(int(controller['t1'] * -7))
             else:
                 currentcam.zoom(int(controller['t1'] * 7))
@@ -136,3 +136,5 @@ if __name__ == '__main__':
                 currentcam.zoom(int(controller['t2'] * -7))
             else:
                 currentcam.zoom(int(controller['t2'] * 7))
+
+        
