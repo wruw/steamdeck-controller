@@ -1,13 +1,12 @@
-ptz_controller.py
 from visca_over_ip import Camera
 from inputs import get_gamepad
 import math
 import threading
 import PyATEMMax
 
-ip1 = '192.168.1.81'
-ip2 = '192.168.1.82'
-atem = '192.168.1.80'
+ip1 = '192.168.0.81'
+ip2 = '192.168.0.82'
+atem = '192.168.0.8'
 
 
 class XboxController(object):
@@ -93,23 +92,35 @@ class XboxController(object):
                     self.Back = event.state
                 elif event.code == 'BTN_START':
                     self.Start = event.state
-                elif event.code == 'BTN_TRIGGER_HAPPY1':
-                    self.LeftDPad = event.state
-                elif event.code == 'BTN_TRIGGER_HAPPY2':
-                    self.RightDPad = event.state
-                elif event.code == 'BTN_TRIGGER_HAPPY3':
-                    self.UpDPad = event.state
-                elif event.code == 'BTN_TRIGGER_HAPPY4':
-                    self.DownDPad = event.state
+                elif event.code == 'ABS_HAT0X':
+                    if event.state == -1:
+                        self.LeftDPad = 1
+                        self.RightDPad = 0
+                    elif event.state == 1:
+                        self.RightDPad = 1
+                        self.LeftDPad = 0
+                    else:
+                        self.RightDPad = 0
+                        self.LeftDPad = 0
+                elif event.code == 'ABS_HAT0Y':
+                    if event.state == -1:
+                        self.DownDPad = 1
+                        self.UpDPad = 0
+                    elif event.state == 1:
+                        self.UpDPad = 1
+                        self.DownDPad = 0
+                    else:
+                        self.DownDPad = 0
+                        self.UpDPad = 0
 
 
 
 
 if __name__ == '__main__':
     currentcam = Camera(ip1)
-    switcher = PyATEMMax.PyATEMMax()
+    switcher = PyATEMMax.ATEMMax()
     switcher.connect(atem)
-    switcher.wait_for_connection()
+    switcher.waitForConnection()
     iscamera2 = False
     cam1active = False
     cam2active = False
@@ -126,7 +137,7 @@ if __name__ == '__main__':
                 currentcam.close_connection()
                 currentcam = Camera(ip1)
                 iscamera2 = False
-            zoom = max(currentcam.get_zoom_position()/1000,1)
+            zoom = max(currentcam.get_zoom_position()/5000,1)
             currentcam.pantilt(int(controller['x1'] * -12 / zoom), int(controller['y1'] * 12 / zoom))
             if controller['b1']:
                 currentcam.zoom(int(controller['t1'] * -7))
@@ -141,33 +152,34 @@ if __name__ == '__main__':
                 currentcam.close_connection()
                 currentcam = Camera(ip2)
                 iscamera2 = True
-            zoom = max(currentcam.get_zoom_position()/1000,1)
+            zoom = max(currentcam.get_zoom_position()/5000,1)
             currentcam.pantilt(int(controller['x2'] * -12 / zoom), int(controller['y2'] * 12 / zoom))
             if controller['b2']:
                 currentcam.zoom(int(controller['t2'] * -7))
             else:
                 currentcam.zoom(int(controller['t2'] * 7))
+        currentcam.get_zoom_position()
         if controller['c1'] or controller['c2'] or controller['c3'] or controller['c4']:
             if controller['c1']:
                 if channel == 0:
-                    channel = 1
+                    channel = 3
                 if controller['c2']:
-                    channel = 7
+                    channel = 8
                 if controller['c3']:
-                    channel = 6
+                    channel = 5
             elif controller['c2']:
                 if channel == 0:
-                    channel = 2
+                    channel = 4
                 if controller['c4']:
                     channel = 6
             elif controller['c3']:
                 if channel == 0:
-                    channel = 3
+                    channel = 1
                 if controller['c4']:
-                    channel = 8
+                    channel = 7
             elif controller['c4']:
                 if channel == 0:
-                    channel = 4
+                    channel = 2
         elif channel:
-            switcher.change_program(channel)
+            switcher.setProgramInputVideoSource(0,channel)
             channel = 0
