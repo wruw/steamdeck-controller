@@ -1,3 +1,4 @@
+
 from visca_over_ip import Camera
 from inputs import get_gamepad
 import math
@@ -181,5 +182,6 @@ if __name__ == '__main__':
                 if channel == 0:
                     channel = 2
         elif channel:
+            print(channel)
             switcher.setProgramInputVideoSource(0,channel)
             channel = 0
