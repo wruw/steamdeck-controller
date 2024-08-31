@@ -5,6 +5,123 @@ import math
 import threading
 import PyATEMMax
 
+import tkinter as tk
+import threading
+import time
+import random
+from tkinter import Scale
+
+cameras = [False] * 8
+camera_weights = [50] * 8
+duration = 0
+
+class CancellationToken:
+    def __init__(self):
+       self.is_cancelled = False
+
+    def cancel(self):
+       self.is_cancelled = True
+       
+    def reset(self):
+       self.is_cancelled = False
+
+
+
+ct = CancellationToken()
+
+class ToggleButton(tk.Button):
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self._toggled = False  # State of the button (False: "Off", True: "On")
+        self.config(command=self.toggle)
+
+    def toggle(self):
+        """Toggle the button's state and update its text."""
+        self._toggled = not self._toggled
+        new_text = "Disable Camera " + self.cget("text")[-1] if self._toggled else "Enable Camera " + self.cget("text")[-1]
+        self.config(text=new_text)
+        cameras[int(self.cget("text")[-1]) - 1] = self._toggled
+
+class RandomButton(tk.Button):
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self._toggled = False  # State of the button (False: "Off", True: "On")
+        self.config(command=self.toggle)
+
+    def toggle(self):
+        """Toggle the button's state and update its text."""
+        self._toggled = not self._toggled
+        new_text = "Disable Random Camera" if self._toggled else "Enable Random Camera"
+        self.config(text=new_text)
+        if self._toggled:
+            random_camera_thread.start()
+        else:
+            ct.cancel()
+            
+class Slider(tk.Scale):
+    def __init__(self, column, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.camera = column
+        self.config(command=self.slide)
+        self.set(50)
+
+    def slide(self, value):
+        camera_weights[self.camera] = value
+
+def create_toggle_button(window, text, row, column):
+    """Creates a toggle button with the given text at the specified row and column."""
+    button = ToggleButton(window, text=text)
+    button.grid(row=row, column=column, padx=5, pady=5)
+    
+def create_slider(window, row, column):
+    """Creates a slider at the specified row and column."""
+    slider = Slider(column, window, from_=0, to=100, orient="horizontal")
+    slider.grid(row=row, column=column, padx=5, pady=5)
+
+def tk():
+    # Create the main window
+    root = tk.Tk()
+    root.title("Camera Automation")
+
+    # Create 8 toggle buttons
+    for i in range(8):
+        create_slider(root, 1, i)
+        text = f"Enable Camera {i + 1}"
+        column = i
+        create_toggle_button(root, text, 2, column)
+    button = RandomButton(root, text="Enable Random Camera")
+    button.grid(row=3, column=0, padx=5, pady=5)
+    duration_scale = Scale(root, from_=1, to=30, orient="horizontal")
+    duration_scale.grid(row=3, column=1, padx=5, pady=5)
+    duration_scale.set(5)
+    duration_scale.config(command = lambda value: set_duration(value))
+    # Start the Tkinter event loop
+    root.mainloop()
+    
+def set_duration(value):
+    global duration
+    duration = value
+
+def random_camera(ct):
+    while True:
+        print(cameras)
+        print(camera_weights)
+        options = []
+        time.sleep(duration+(duration/2*(random.random()-0.5))) 
+        if ct.is_cancelled:
+            global random_camera_thread
+            ct.reset()
+            random_camera_thread = threading.Thread(target=random_camera, args=(ct,))
+            break
+        active_cameras = [i for i, camera in enumerate(cameras) if camera]
+        if(active_cameras):
+            for(camera, weight) in zip(active_cameras, camera_weights):
+                options.extend([camera] * int(weight))
+            print(random.choice(options)+1)
+
+random_camera_thread = threading.Thread(target=random_camera, args=(ct,))
+
+
 ip1 = '192.168.0.81'
 ip2 = '192.168.0.82'
 atem = '192.168.0.8'
@@ -118,6 +235,8 @@ class XboxController(object):
 
 
 if __name__ == '__main__':
+    tkinter_thread = threading.Thread(target=tk)
+    tkinter_thread.start()
     currentcam = Camera(ip1)
     switcher = PyATEMMax.ATEMMax()
     switcher.connect(atem)
@@ -183,5 +302,8 @@ if __name__ == '__main__':
                     channel = 2
         elif channel:
             print(channel)
-            switcher.setProgramInputVideoSource(0,channel)
+            ct.cancel()
+            switcher.setPreviewInputVideoSource(0,channel)
             channel = 0
+        if controller['A']:
+            switcher.execCutME(0)
