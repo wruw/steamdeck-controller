@@ -13,7 +13,7 @@ from tkinter import Scale
 
 cameras = [False] * 8
 camera_weights = [50] * 8
-duration = 0
+duration = 5
 
 class CancellationToken:
     def __init__(self):
@@ -78,7 +78,7 @@ def create_slider(window, row, column):
     slider = Slider(column, window, from_=0, to=100, orient="horizontal")
     slider.grid(row=row, column=column, padx=5, pady=5)
 
-def tk():
+def tk_function():
     # Create the main window
     root = tk.Tk()
     root.title("Camera Automation")
@@ -104,10 +104,13 @@ def set_duration(value):
 
 def random_camera(ct):
     while True:
+        global duration
         print(cameras)
         print(camera_weights)
         options = []
-        time.sleep(duration+(duration/2*(random.random()-0.5))) 
+        sleepTime = (int(duration))+(int(duration)/2*(random.random()-0.5))
+        print("sleeping for {} seconds".format(sleepTime))
+        time.sleep(sleepTime) 
         if ct.is_cancelled:
             global random_camera_thread
             ct.reset()
@@ -118,13 +121,15 @@ def random_camera(ct):
             for(camera, weight) in zip(active_cameras, camera_weights):
                 options.extend([camera] * int(weight))
             print(random.choice(options)+1)
+            switcher.setProgramInputVideoSource(0,random.choice(options)+1)
+
 
 random_camera_thread = threading.Thread(target=random_camera, args=(ct,))
 
 
-ip1 = '192.168.0.81'
-ip2 = '192.168.0.82'
-atem = '192.168.0.8'
+ip1 = '192.168.1.81'
+ip2 = '192.168.1.82'
+atem = '192.168.1.8'
 
 
 class XboxController(object):
@@ -172,7 +177,8 @@ class XboxController(object):
         c2 = self.RightDPad
         c3 = self.LeftDPad
         c4 = self.DownDPad
-        return {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2, 'b1': b1, 'b2': b2, 't1': t1, 't2': t2, 'c1': c1, 'c2': c2, 'c3': c3, 'c4': c4}
+        A = self.A
+        return {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2, 'b1': b1, 'b2': b2, 't1': t1, 't2': t2, 'c1': c1, 'c2': c2, 'c3': c3, 'c4': c4, 'A': A}
 
     def _monitor_controller(self):
         while True:
@@ -235,16 +241,21 @@ class XboxController(object):
 
 
 if __name__ == '__main__':
-    tkinter_thread = threading.Thread(target=tk)
+    print('initiating GUI')
+    tkinter_thread = threading.Thread(target=tk_function)
     tkinter_thread.start()
+    print('connecting to camera 1')
     currentcam = Camera(ip1)
+    print('connecting to ATEM')
     switcher = PyATEMMax.ATEMMax()
     switcher.connect(atem)
     switcher.waitForConnection()
     iscamera2 = False
     cam1active = False
     cam2active = False
+    toProgram = False
     channel = 0
+    print('connecting to controller')
     joy = XboxController()
     while True:
         controller = joy.read()
@@ -279,7 +290,7 @@ if __name__ == '__main__':
             else:
                 currentcam.zoom(int(controller['t2'] * 7))
         currentcam.get_zoom_position()
-        if controller['c1'] or controller['c2'] or controller['c3'] or controller['c4']:
+        if controller['c1'] or controller['c2'] or controller['c3'] or controller['c4'] or controller['A']:
             if controller['c1']:
                 if channel == 0:
                     channel = 3
@@ -300,10 +311,13 @@ if __name__ == '__main__':
             elif controller['c4']:
                 if channel == 0:
                     channel = 2
+            elif controller['A']:
+                toProgram = True
         elif channel:
             print(channel)
             ct.cancel()
             switcher.setPreviewInputVideoSource(0,channel)
             channel = 0
-        if controller['A']:
+        elif toProgram:
             switcher.execCutME(0)
+            toProgram = False
