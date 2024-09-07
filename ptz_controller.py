@@ -17,8 +17,7 @@ duration = 5
 
 class CancellationToken:
     def __init__(self):
-       self.is_cancelled = False
-
+       self.is_cancelled = True
     def cancel(self):
        self.is_cancelled = True
        
@@ -47,6 +46,8 @@ class RandomButton(tk.Button):
         super().__init__(master, **kwargs)
         self._toggled = False  # State of the button (False: "Off", True: "On")
         self.config(command=self.toggle)
+        check_thread = threading.Thread(target=self.check)
+        check_thread.start()
 
     def toggle(self):
         """Toggle the button's state and update its text."""
@@ -54,10 +55,17 @@ class RandomButton(tk.Button):
         new_text = "Disable Random Camera" if self._toggled else "Enable Random Camera"
         self.config(text=new_text)
         if self._toggled:
+            ct.reset()
             random_camera_thread.start()
         else:
             ct.cancel()
-            
+
+    def check(self):
+        while not ct.is_cancelled:
+            time.sleep(1)
+        self.config(text="Enable Random Camera")
+        self._toggled = False
+                 
 class Slider(tk.Scale):
     def __init__(self, column, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -105,6 +113,7 @@ def set_duration(value):
 def random_camera(ct):
     while True:
         global duration
+        global random_camera_thread
         print(cameras)
         print(camera_weights)
         options = []
@@ -112,7 +121,6 @@ def random_camera(ct):
         print("sleeping for {} seconds".format(sleepTime))
         time.sleep(sleepTime) 
         if ct.is_cancelled:
-            global random_camera_thread
             ct.reset()
             random_camera_thread = threading.Thread(target=random_camera, args=(ct,))
             break
@@ -237,9 +245,6 @@ class XboxController(object):
                         self.DownDPad = 0
                         self.UpDPad = 0
 
-
-
-
 if __name__ == '__main__':
     print('initiating GUI')
     tkinter_thread = threading.Thread(target=tk_function)
@@ -257,6 +262,7 @@ if __name__ == '__main__':
     channel = 0
     print('connecting to controller')
     joy = XboxController()
+    print('all connected')
     while True:
         controller = joy.read()
         if controller['x1'] > 0.1 or controller['x1'] < -0.1 or controller['y1'] > 0.1 or controller['y1'] < -0.1 or controller['t1'] > 0.1 or cam1active:
