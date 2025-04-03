@@ -265,8 +265,8 @@ if __name__ == '__main__':
     print('all connected')
     while True:
         controller = joy.read()
-        if controller['x1'] > 0.1 or controller['x1'] < -0.1 or controller['y1'] > 0.1 or controller['y1'] < -0.1 or controller['t1'] > 0.1 or cam1active:
-            if controller['x1'] < 0.1 and controller['x1'] > -0.1 and controller['y1'] < 0.1 and controller['y1'] > -0.1 and controller['t1'] < 0.1:
+        if controller['x1'] > 0.05 or controller['x1'] < -0.05 or controller['y1'] > 0.05 or controller['y1'] < -0.05 or controller['t1'] > 0.05 or cam1active:
+            if controller['x1'] < 0.05 and controller['x1'] > -0.05 and controller['y1'] < 0.05 and controller['y1'] > -0.05 and controller['t1'] < 0.05:
                 cam1active = False
             else:
                 cam1active = True
@@ -280,8 +280,8 @@ if __name__ == '__main__':
                 currentcam.zoom(int(controller['t1'] * -7))
             else:
                 currentcam.zoom(int(controller['t1'] * 7))
-        if controller['x2'] > 0.1 or controller['x2'] < -0.1 or controller['y2'] > 0.1 or controller['y2'] < -0.1 or controller['t2'] > 0.1 or cam2active:
-            if controller['x2'] < 0.1 and controller['x2'] > -0.1 and controller['y2'] < 0.1 and controller['y2'] > -0.1 and controller['t2'] < 0.1:
+        if controller['x2'] > 0.05 or controller['x2'] < -0.05 or controller['y2'] > 0.05 or controller['y2'] < -0.05 or controller['t2'] > 0.05 or cam2active:
+            if controller['x2'] < 0.05 and controller['x2'] > -0.05 and controller['y2'] < 0.05 and controller['y2'] > -0.05 and controller['t2'] < 0.05:
                 cam2active = False
             else:
                 cam2active = True
